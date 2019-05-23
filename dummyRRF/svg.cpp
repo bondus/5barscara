@@ -1,25 +1,6 @@
 
 #include <stdio.h>
 #include "FiveBarScaraKinematics.h"
-/*
-
-<html>
-<body>
-
-<h1>My first SVG</h1>
-
-<svg width="100" height="100">
-  <circle cx="50" cy="50" r="40" stroke="green" stroke-width="4" fill="yellow" />
-  <line x1="0" y1="0" x2="200" y2="200" style="stroke:rgb(255,0,0);stroke-width:2" />
-<text x="0" y="15" fill="red">I love SVG!</text>
-</svg>
-
-</body>
-</html>
-
-
- */
-
 
 float anglediff(float a, float b) {
   float d = fabs(a -b);
@@ -121,7 +102,7 @@ int main(void)
         float dR = anglediff(fbs.cachedThetaR, ar);
       
         if(dL > 0.1 || dR > 0.1) {
-          fprintf(stderr, "Knas wm: %d\n", workmode);
+          fprintf(stderr, "Something wrong wm: %d\n", workmode);
           fprintf(stderr, "     %f %f => %f %f\n", al, ar, machinePos[0], machinePos[1]);
           float resultcoords2[6];
           fbs.getForward(resultcoords2, fbs.cachedThetaL, fbs.cachedThetaR);
@@ -153,10 +134,10 @@ int main(void)
             (workmode&2)?128:0, (workmode & 4)?128:0);
             
     l=1;
-    for(float aL = minL; aL <=maxL+step*2; l++, aL+=step)
+    for(float aL = minL; aL <=maxL+step; l++, aL+=step)
     {
       r = 1;
-      for(float  aR = minR; aR <=maxR+step*2; r++, aR+=step)
+      for(float  aR = minR; aR <=maxR+step; r++, aR+=step)
       {
         float x = machinePosGrid[l][r][0];
         float y = machinePosGrid[l][r][1];
