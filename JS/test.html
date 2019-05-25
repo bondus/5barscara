@@ -1,0 +1,39 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Five Bar Scara</title>
+  <script src="SVG.js"></script>
+  <link rel="stylesheet" type="text/css" href="test.css">
+</head>
+<body>
+
+  <div id="interaction">
+      Left Proximal Length
+      <input type="text" placeholder="" id="proxL" onchange="inputChanged()"><BR>
+      Right Proximal Length
+      <input type="text" placeholder="" id="proxR" onchange="inputChanged()"><BR>
+
+      Left Distal Length
+      <input type="text" placeholder="" id="distL" onchange="inputChanged()"><BR>
+      Right Distal Length
+      <input type="text" placeholder="" id="distR" onchange="inputChanged()"><BR>
+
+      Actuator Distance
+      <input type="text" placeholder="" id="actDistance" onchange="inputChanged()"><BR>
+      Work modes
+      <input type="checkbox" id="work1" onchange="inputChanged()">
+      <input type="checkbox" id="work2" onchange="inputChanged()">
+      <input type="checkbox" id="work3" onchange="inputChanged()">
+      <input type="checkbox" id="work4" onchange="inputChanged()">
+
+  </div>
+  <div id="drawing">
+    <script src="scara.js"></script>
+  </div>
+
+
+</body>
+</html>
+
