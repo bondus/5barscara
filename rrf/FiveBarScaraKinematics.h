@@ -34,10 +34,7 @@ public:
 	void MotorStepsToCartesian(const int32_t motorPos[], const float stepsPerMm[], size_t numVisibleAxes, size_t numTotalAxes, float machinePos[]) const override;
 	bool IsReachable(float x, float y, bool isCoordinated) const override;
 	bool LimitPosition(float finalCoords[], float * null initialCoords, size_t numVisibleAxes, AxesBitmap axesHomed, bool isCoordinated, bool applyM208Limits) const override;
-	// OLD bool LimitPosition(float coords[], size_t numVisibleAxes, AxesBitmap axesHomed, bool isCoordinated, bool applyM208Limits) const override;
-	//bool LimitPosition(float position[], size_t numAxes, AxesBitmap axesHomed, bool isCoordinated) const override;
 	void GetAssumedInitialPosition(size_t numAxes, float positions[]) const override;
-	size_t NumHomingButtons(size_t numVisibleAxes) const override;
 	const char* HomingButtonNames() const override { return "PDZUVWABC"; }
 	HomingMode GetHomingMode() const override { return HomingMode::homeIndividualMotors; }
 	AxesBitmap AxesAssumedHomed(AxesBitmap g92Axes) const override;
@@ -46,7 +43,6 @@ public:
 	bool QueryTerminateHomingMove(size_t axis) const override;
 	void OnHomingSwitchTriggered(size_t axis, bool highEnd, const float stepsPerMm[], DDA& dda) const override;
 	void LimitSpeedAndAcceleration(DDA& dda, const float *normalisedDirectionVector, size_t numVisibleAxes, bool continuousRotationShortcut) const override;
-	// OLD void LimitSpeedAndAcceleration(DDA& dda, const float *normalisedDirectionVector, size_t numVisibleAxes) const override;
 	bool IsContinuousRotationAxis(size_t axis) const override;
 	AxesBitmap GetLinearAxes() const override;
 	AxesBitmap GetConnectedAxes(size_t axis) const override;
@@ -58,7 +54,6 @@ private:
 	static constexpr const char *Home5BarScaraFileName = "home5barscara.g";
 
 	void Recalc();
-	int getNumParameters(char c, GCodeBuffer gb) const;
 	int getQuadrant(float x, float y) const;
 	bool isCantilevered(int mode) const;
 	float getAbsoluteAngle(float xOrig, float yOrig, float xDest, float yDest) const;
@@ -68,7 +63,7 @@ private:
 	void getForward(float resultcoords[], float thetaL, float thetaR) const;
 	void getInverse(const float coords[]) const;
 	float getAngle(float x1, float y1, float xAngle, float yAngle, float x2, float y2) const;
-    float getTurn(float x1, float y1, float xAngle, float yAngle, float x2, float y2) const;
+    float getTurn(float x1, float y1, float x2, float y2, float x3, float y3) const;
 	bool isPointInsideDefinedPrintableArea(float x0, float y0) const;
 	bool constraintsOk(const float coords[]) const;
 
@@ -90,8 +85,8 @@ private:
 	bool printAreaDefined;
 	float printArea[4];	// x1, y1, x2, y2
 
-	float constrMin;
-	float constrMax;
+	float headAngleMin;
+	float headAngleMax;
 	float proxDistLAngleMin;
 	float proxDistLAngleMax;
 	float proxDistRAngleMin;
@@ -104,8 +99,11 @@ private:
 	// Derived parameters
 
 	// State variables
-	mutable float cachedX0, cachedY0, cachedThetaL, cachedThetaR, cachedXL, cachedXR, cachedYL, cachedYR,
-		cachedX1, cachedY1;
+	mutable float cachedX0, cachedY0;
+	mutable float cachedThetaL, cachedThetaR;
+	mutable float cachedXL, cachedXR;
+	mutable float cachedYL, cachedYR;
+	mutable float cachedX1, cachedY1;
 	mutable bool cachedInvalid;
 };
 
