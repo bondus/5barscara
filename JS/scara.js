@@ -8,34 +8,33 @@ function fabs(a)    { return Math.abs(a) }
 
 class FiveBarScaraKinematics {
     constructor() {
-        this.xOrigL = -50 //-54
-        this.xOrigR = 50 //54 
+        this.xOrigL = -93//-54
+        this.xOrigR = 93 //54 
         
         this.yOrigL = 0 //-170
         this.yOrigR = 0 //-170 
         
         this.workmode = 2
         
-        this.proximalL = 80 //128
-        this.proximalR = 80 //128 //127.5
+        this.proximalL = 134.0 //128
+        this.proximalR = 134.0 //128 //127.5
         
-        this.distalL = 80 //182.0
-        this.distalR = 80 //182.0 //181.0
+        this.distalL = 205 //182.0
+        this.distalR = 205 //182.0 //181.0
         
-        this.constrMin = 15
-        this.constrMax = 170
+        this.constrMin = 0
+        this.constrMax = 180
 
-        // Angle limitations, totally ignored for now
-        this.proxDistLAngleMin = 15
-        this.proxDistLAngleMax = 360-15
-        this.proxDistRAngleMin = 15
-        this.proxDistRAngleMax = 360-15
+        this.proxDistLAngleMin = 0
+        this.proxDistLAngleMax = 360
+        this.proxDistRAngleMin = 0
+        this.proxDistRAngleMax = 360
         
-        this.actuatorAngleLMin =  34
-        this.actuatorAngleLMax =  180+71 //71 // 71 
+        this.actuatorAngleLMin =  0
+        this.actuatorAngleLMax =  360
         
-        this.actuatorAngleRMin =  -71 //  0-71//71 // -71 
-        this.actuatorAngleRMax =  180-34 //34
+        this.actuatorAngleRMin =  0
+        this.actuatorAngleRMax =  360
         
         this.printAreaDefined = false
 
@@ -89,6 +88,25 @@ class FiveBarScaraKinematics {
     {
         return ((xAngle-x1)*(y2-y1))-((yAngle-y1)*(x2-x1))
     }
+    
+    // 1 - angle - 2 are ordered clockwise. The angle is at the inner/right side, between 2 and 1 clockwise
+    getAngle( x1,  y1,  xAngle,  yAngle,  x2,  y2)
+    {
+        var angle1 = this.getAbsoluteAngle(xAngle, yAngle, x1, y1);
+        var angle2 = this.getAbsoluteAngle(xAngle, yAngle, x2, y2);
+
+        var angle = 0.0;
+        if(angle2 < angle1) {
+            angle = 360 + angle2 - angle1;
+        }
+        else {
+            angle = angle2 - angle1;
+        }
+        
+        return angle;
+    }
+
+
     
     // first circle, second circle. Return the two intersection points
     getIntersec(firstRadius, secondRadius,  firstX,  firstY, secondX,  secondY)
@@ -191,12 +209,15 @@ class FiveBarScaraKinematics {
         var righttheta = this.getTheta(this.proximalR, this.distalR, this.xOrigR, this.yOrigR, x, y, true)
         var thetaR = righttheta[2]
 
-        // Sanity check hotend tur
+        // Sanity check hotend turn
         var turnHot = this.getTurn(lefttheta[0], lefttheta[1],  x, y, righttheta[0], righttheta[1]);
 
         if(turnHot >0 ) { // left turn!!
             return [Math.NaN, Math.NaN]
         }
+
+        // TODO: cantilevering
+        
         return [thetaL, thetaR]
     }
 
@@ -242,6 +263,68 @@ class FiveBarScaraKinematics {
         
         return [xL, yL, xR, yR, xDst, yDst]
     }
+
+    isReachable(x, y)
+    {
+        var lefttheta = this.getTheta(this.proximalL, this.distalL, this.xOrigL, this.yOrigL, x, y, false)
+        var thetaL = lefttheta[2]
+        
+        var righttheta = this.getTheta(this.proximalR, this.distalR, this.xOrigR, this.yOrigR, x, y, true)
+        var thetaR = righttheta[2]
+        
+    }
+
+    constraintsOk(x,y)
+    {
+        //return true; // XXX
+        var lefttheta = this.getTheta(this.proximalL, this.distalL, this.xOrigL, this.yOrigL, x, y, false)
+        var thetaL = lefttheta[2]
+        var XL = lefttheta[0]
+        var YL = lefttheta[1]
+        
+        var righttheta = this.getTheta(this.proximalR, this.distalR, this.xOrigR, this.yOrigR, x, y, true)
+        var thetaR = righttheta[2]
+        var XR = righttheta[0]
+        var YR = righttheta[1]
+
+        //console.log(thetaL, thetaR);
+        if(isNaN(thetaL) || isNaN(thetaR)) return false;
+        
+        // check theta angles
+        if(this.actuatorAngleLMin < 0 &&  thetaL > this.actuatorAngleLMax) thetaL -= 360;
+        if(this.actuatorAngleLMin > thetaL || this.actuatorAngleLMax < thetaL) {
+            return false;
+        }
+        
+        if(this.actuatorAngleRMin < 0 &&  thetaR > this.actuatorAngleRMax) thetaR -= 360;
+        if(this.actuatorAngleRMin > thetaR || this.actuatorAngleRMax < thetaR) {
+            return false;
+        }
+
+
+        
+        // check constr
+        var constr = this.getAngle(XL, YL, x, y, XR, YR);
+        //printf("c: %f\n", constr);
+        if(this.constrMin > constr || this.constrMax < constr) {
+            return false;
+        }
+        
+        // check proxDistal angle L and R
+        var angleProxDistL = this.getAngle(this.xOrigL, this.yOrigL, XL, YL, x, y);
+        //console.log(angleProxDistL, this.proxDistLAngleMax)
+        if(this.proxDistLAngleMin > angleProxDistL || this.proxDistLAngleMax < angleProxDistL) {
+            return false;
+        }
+        var angleProxDistR = this.getAngle(this.xOrigR, this.yOrigR, XR, YR, x, y);
+        //printf("aR: %f\n", angleProxDistR);
+        //console.log(angleProxDistR, this.proxDistRAngleMax)
+        if(this.proxDistRAngleMin > angleProxDistR || this.proxDistRAngleMax < angleProxDistR) {
+            return false;
+        }
+        
+        return true;
+    }    
 }
 
 function drawCanvas(draw) {
@@ -290,7 +373,6 @@ function drawScara(draw, fbs, step, workmode) {
             ys[l][r] = yDst
         }        
     }
-
     
     var color = "#000"
     if(workmode == 1) color = "#700"
@@ -302,6 +384,9 @@ function drawScara(draw, fbs, step, workmode) {
         for(r = 0; r < 360; r += step) {
             var x0 = xs[l][r];
             var y0 = ys[l][r];
+            var ok = fbs.constraintsOk(x0, y0)
+            var opacity = 1
+            if(!ok) opacity = 0.2
             if(!isNaN(x0) && !isNaN(y0))
             {                
                 var ll = (l+step) % 360
@@ -309,14 +394,14 @@ function drawScara(draw, fbs, step, workmode) {
                 var y1 = ys[ll][r];
                 if(!isNaN(x1) && !isNaN(y1))
                 {
-                    var line = draw.line(400+x0,400-y0, 400+x1,400-y1).stroke({ width: 0.3, color: color });
+                    var line = draw.line(400+x0,400-y0, 400+x1,400-y1).stroke({ width: 0.3, color: color, opacity:opacity});
                 }
                 var rr = (r+step) % 360
                 var x2 = xs[l][rr];
                 var y2 = ys[l][rr];
                 if(!isNaN(x2) && !isNaN(y2))
                 {
-                    draw.line(400+x0,400-y0, 400+x2,400-y2).stroke({ width: 0.3, color: color  });
+                    draw.line(400+x0,400-y0, 400+x2,400-y2).stroke({ width: 0.3, color: color, opacity:opacity});
                 }
             }
             
@@ -329,7 +414,6 @@ function drawScara(draw, fbs, step, workmode) {
 }
 
 function inputChanged() {
-    console.log("change")
 
     var draw = document.draw
     var fbs  = document.fbs
@@ -359,12 +443,80 @@ function inputChanged() {
         
     draw.clear()
     drawCanvas(draw)
+
+    for(workmode = 1; workmode <= 4; workmode ++) {
+        var color = "#000"
+        if(workmode == 1) color = "#f00"
+        if(workmode == 2) color = "#0f0"
+        if(workmode == 3) color = "#f0f"
+        if(workmode == 4) color = "#00f"
+        document.proxL[workmode]=draw.line(0, 0, 0, 0).stroke({ width: 2, color: color  })
+        document.proxR[workmode]=draw.line(0, 0, 0, 0).stroke({ width: 2, color: color  })
+        document.distL[workmode]=draw.line(0, 0, 0, 0).stroke({ width: 2, color: color  })
+        document.distR[workmode]=draw.line(0, 0, 0, 0).stroke({ width: 2, color: color  })
+
+        document.resolution[workmode] = draw.text(""); 
+    }
+
+    document.coords = draw.text("X Y").move(0,16)
     
-    if(document.getElementById("work1").checked) drawScara(draw, fbs, 3, 1)
-    if(document.getElementById("work2").checked) drawScara(draw, fbs, 3, 2)
-    if(document.getElementById("work3").checked) drawScara(draw, fbs, 3, 3)
-    if(document.getElementById("work4").checked) drawScara(draw, fbs, 3, 4)
-     
+    draw.circle(10).move(400+fbs.xOrigL-5, 400-fbs.yOrigL-5)
+    draw.circle(10).move(400+fbs.xOrigR-5, 400-fbs.yOrigR-5)
+    
+    if(document.getElementById("work1").checked) drawScara(draw, fbs, 4, 1)
+    if(document.getElementById("work2").checked) drawScara(draw, fbs, 4, 2)
+    if(document.getElementById("work3").checked) drawScara(draw, fbs, 4, 3)
+    if(document.getElementById("work4").checked) drawScara(draw, fbs, 4, 4)     
+}
+
+function clicked(event) {
+
+
+    var draw = document.draw
+    var fbs  = document.fbs
+
+    var x  = event.offsetX - 400
+    var y = -(event.offsetY - 400)
+
+
+    for(workmode = 1; workmode <= 4; workmode ++) {
+        var name  = "work"+workmode        
+        var active = document.getElementById(name).checked
+        fbs.workmode = workmode;        
+        var [l, r] = fbs.getInverse(x,y)        
+        if(fbs.constraintsOk(x, y) && active && !isNaN(l) && !isNaN(r)) {
+            var [xL, yL, xR, yR, xDst, yDst ]= fbs.getForward(l, r)
+            document.proxL[workmode].attr({x1 : 400+fbs.xOrigL, y1: 400-fbs.yOrigL, x2:400+xL, y2:400-yL})
+            document.proxR[workmode].attr({x1 : 400+fbs.xOrigR, y1: 400-fbs.yOrigR, x2:400+xR, y2:400-yR})
+            document.distL[workmode].attr({x1 : 400+xL, y1: 400-yL, x2:400+xDst, y2:400-yDst})
+            document.distR[workmode].attr({x1 : 400+xR, y1: 400-yR, x2:400+xDst, y2:400-yDst})            
+            
+            var [_, _, _, _, xl, yl ] = fbs.getForward(l+0.1, r);
+            var [_, _, _, _, xr, yr ] = fbs.getForward(l, r+0.1);
+            var rl = Math.sqrt(fsquare(xl-x) + fsquare(yl-y))/0.1
+            var rr = Math.sqrt(fsquare(xr-x) + fsquare(yr-y))/0.1
+            //console.log(document.resolution[workmode])
+            //document.resolution[workmode].text("wm"+workmode+": " + rl.toFixed(2) + " " + rr.toFixed(2) + " mm/deg")
+
+            var stepsPerDeg = 106.666;
+            rl = stepsPerDeg / rl
+            rr = stepsPerDeg / rr
+            document.resolution[workmode].text("L "+l.toFixed(1) + " R " + r.toFixed(1)).move(0,workmode*16+16)
+            //document.resolution[workmode].text("wm"+workmode+": " + rl.toFixed(2) + " " + rr.toFixed(2) + " s/mm")
+            
+        } else {
+            document.proxL[workmode].attr({x1 : 0, y1: 0, x2:40, y2:0})
+            document.proxR[workmode].attr({x1 : 0, y1: 0, x2:40, y2:0})
+            document.distL[workmode].attr({x1 : 0, y1: 0, x2:40, y2:0})
+            document.distR[workmode].attr({x1 : 0, y1: 0, x2:40, y2:0})
+        }
+
+    }
+
+    document.coords.text("X " + x + " Y " + y)
+    
+
+    
 }
 
 SVG.on(document, 'DOMContentLoaded', function() {
@@ -387,6 +539,16 @@ SVG.on(document, 'DOMContentLoaded', function() {
     document.fbs = fbs;
     document.draw = draw;
 
+    // For the line objects
+    document.proxL = Array(4).fill(null)
+    document.proxR = Array(4).fill(null)
+    document.distL = Array(4).fill(null)
+    document.distR = Array(4).fill(null)
+
+    document.resolution = Array(4).fill(null)
+
+
+    
     inputChanged()
 })
 

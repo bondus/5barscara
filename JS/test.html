@@ -22,14 +22,17 @@
 
       Actuator Distance
       <input type="text" placeholder="" id="actDistance" onchange="inputChanged()"><BR>
-      Work modes
-      <input type="checkbox" id="work1" onchange="inputChanged()">
-      <input type="checkbox" id="work2" onchange="inputChanged()">
-      <input type="checkbox" id="work3" onchange="inputChanged()">
-      <input type="checkbox" id="work4" onchange="inputChanged()">
+      Work mode 1:
+      <input type="checkbox" id="work1" onchange="inputChanged()"> <br>
+      Work mode 2:
+      <input type="checkbox" id="work2" onchange="inputChanged()"> <br>
+      Work mode 3:
+      <input type="checkbox" id="work3" onchange="inputChanged()"> <br>
+      Work mode 4:
+      <input type="checkbox" id="work4" onchange="inputChanged()"> <br>
 
   </div>
-  <div id="drawing">
+  <div id="drawing" onmouseover="clicked(event)">
     <script src="scara.js"></script>
   </div>
 
