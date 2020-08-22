@@ -8,19 +8,19 @@ function fabs(a)    { return Math.abs(a) }
 
 class FiveBarScaraKinematics {
     constructor() {
-        this.xOrigL = -93//-54
-        this.xOrigR = 93 //54 
+        this.xOrigL = -50//-54
+        this.xOrigR =  50 //54 
         
         this.yOrigL = 0 //-170
         this.yOrigR = 0 //-170 
         
         this.workmode = 2
         
-        this.proximalL = 134.0 //128
-        this.proximalR = 134.0 //128 //127.5
+        this.proximalL = 100.0 //128
+        this.proximalR = 100.0 //128 //127.5
         
-        this.distalL = 205 //182.0
-        this.distalR = 205 //182.0 //181.0
+        this.distalL = 100 //182.0
+        this.distalR = 100 //182.0 //181.0
         
         this.constrMin = 0
         this.constrMax = 180
